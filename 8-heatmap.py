@@ -178,8 +178,8 @@ def heatmap_profile_counts(df_buoy, list_boxes_latlon, time_start, time_end):
     #'lon': (lon, lon+lon_stride)}
     #list_boxes_latlon.append(lat_lon_box)
 
-    df  = df_buoy[ (df_buoy.date >= TIME_START) & (df_buoy.date <= TIME_END)]
-    print('time limited df', df.shape, TIME_START, TIME_END)
+    df  = df_buoy[ (df_buoy.date >= time_start) & (df_buoy.date <= time_end)]
+    print('time limited df', df.shape, time_start, time_end)
 
 
     zeros = [] # used for AABB(axis aligned bounding box) line intersection check later
@@ -210,7 +210,8 @@ def heatmap_profile_counts(df_buoy, list_boxes_latlon, time_start, time_end):
 
 #================
 TIME_START = '2021-01-01'
-TIME_END = '2021-01-31'
+TIME_END = '2021-02-28'
+#TIME_END = '2021-01-31'
 
 LIMITS = { 'lat1': 12, 'lat2': 12+30, 'lon1': -63, 'lon2': -63+45 }
 
@@ -284,6 +285,7 @@ def add_buoy_to_map(m, df_buoy, time_start, time_end):
     # Format latlon and times for plotting
     df = df_buoy[['date', 'wmo']]
     df['longlat'] = list(zip(df_buoy.longitude, df_buoy.latitude))
+    df  = df[ (df.date >= time_start) & (df.date <= time_end)]
 
     features = []
 
@@ -295,16 +297,16 @@ def add_buoy_to_map(m, df_buoy, time_start, time_end):
     gps_fill = -999
 
 
-    for ith_buoy, buoy in enumerate(list_buoy_ids):
+    #for ith_buoy, buoy in enumerate(list_buoy_ids):
+    for ith_buoy, buoy in enumerate(list_buoy_ids[:2]):
         # Create timelapse lines for a single buoy
-        buoy_df = df[ (df.wmo == buoy) &
-                     (df.date > time_start) &
-                     (df.date < time_end)]
+        buoy_df = df[ (df.wmo == buoy) ]
 
-        #print('i', ith_buoy, 'buoy id', buoy, 'num profiles',
-        #      buoy_df.shape[0])
+        print('i', ith_buoy, 'buoy id', buoy, 'num profiles',
+              buoy_df.shape[0])
 
-        buoy_df = buoy_df.sort_values(by=['wmo','date'])
+        buoy_df = buoy_df.sort_values(by=['date'])
+        #print(buoy_df)
 
         # Create lines consist of # (latlong_pointA), timeA to (latlong_pointB, timeB)
         buoy_df['line_coords'] = list(zip(
@@ -319,7 +321,7 @@ def add_buoy_to_map(m, df_buoy, time_start, time_end):
         ))
 
         for _, row in buoy_df.iterrows():
-            #print('This buoy is ', ith_buoy, row.wmo,  row.line_times, row.line_coords)
+            print('This buoy is ', ith_buoy, row.wmo,  row.line_times, row.line_coords)
             if row.line_times[0] == 0:
                 # Due to use of pd.shift, first 'line' is just point and  has no start time
                 continue
@@ -341,17 +343,17 @@ def add_buoy_to_map(m, df_buoy, time_start, time_end):
                                     f'<i>Line Details: {list(zip(row.line_times, row.line_coords))}</i>',#, Date uploaded: {row.date_update}',
                                     },
                      }
-        features.append(feature)
+            features.append(feature)
     #features
-    print('num of features', len(features))
+    print('num of features (aka number of buoys in timeframe)', len(features))
 
     plugins.TimestampedGeoJson(
         { "type": "FeatureCollection", "features": features},
         period="P1D", add_last_point=True,
-        duration = 'P2M',
+        duration = 'P3M',
         min_speed = 1,
-        max_speed = 50,
-        transition_time = 100, # in millisec
+        max_speed = 10,
+        transition_time = 300, # in millisec
     ).add_to(m)
 
     return m
