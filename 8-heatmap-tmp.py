@@ -297,8 +297,8 @@ def add_buoy_to_map(m, df_buoy, time_start, time_end):
     gps_fill = -999
 
 
-    #for ith_buoy, buoy in enumerate(list_buoy_ids):
-    for ith_buoy, buoy in enumerate(list_buoy_ids[:2]):
+    #for ith_buoy, buoy in enumerate(list_buoy_ids[:2]):
+    for ith_buoy, buoy in enumerate(list_buoy_ids):
         # Create timelapse lines for a single buoy
         buoy_df = df[ (df.wmo == buoy) ]
 
