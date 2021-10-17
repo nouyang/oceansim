@@ -267,3 +267,10 @@ while True:
         break
 
 env.close()
+
+
+# TODO: add crumb plotting
+# TODO: add wind affect on batt
+# TODO: check goal region works
+# TODO: plot wind region
+
