@@ -7,9 +7,12 @@ import os
 import sys
 import math
 import heapq
+import numpy as np
 
-sys.path.append(os.path.dirname(os.path.abspath(__file__)) +
-                "/../../Search_based_Planning/")
+#sys.path.append(os.path.dirname(os.path.abspath(__file__)) +
+                #"/../../Search_based_Planning/")
+sys.path.append(os.path.dirname(os.path.abspath('.')) +
+                "/")
 
 from Search_2D import plotting, env
 
@@ -31,6 +34,19 @@ class AStar:
         self.CLOSED = []  # CLOSED set / VISITED order
         self.PARENT = dict()  # recorded parent
         self.g = dict()  # cost to come
+
+
+        self.wind_cost_multiplier = -0.0
+        
+        # 51 x 31
+        
+        self.wind_xgrid = np.concatenate( 
+            (
+                np.ones((10, 51)),
+                -np.ones((21, 51))
+            ), axis=0
+        )
+        self.wind_ygrid = np.zeros((31,51))
 
     def searching(self):
         """
@@ -137,8 +153,19 @@ class AStar:
 
         if self.is_collision(s_start, s_goal):
             return math.inf
+        # This is just euclidean cost.
 
-        return math.hypot(s_goal[0] - s_start[0], s_goal[1] - s_start[1])
+        x2, y2 = s_goal
+        euclid_cost = math.hypot(x2 - s_start[0], y2 - s_start[1])
+
+        # Just ... use final field for now?
+        # Assume start cost has been absorbed as part of prev calculation for past move already
+        wind_x = self.wind_xgrid[y2][x2]
+        wind_y = self.wind_ygrid[y2][x2]
+        #print(self.wind_xgrid.shape, self.wind_ygrid.shape, x2, y2)
+
+        wind_cost = self.wind_cost_multiplier * (wind_x + wind_y)
+        return euclid_cost + wind_cost
 
     def is_collision(self, s_start, s_end):
         """
@@ -216,6 +243,12 @@ def main():
 
     path, visited = astar.searching()
     plot.animation(path, visited, "A*")  # animation
+
+    '''
+    plot.plot_grid('A*')
+    plot.plot_wind(astar.wind_xgrid, astar.wind_ygrid)
+    plot.plot_path(path)
+    '''
 
     # path, visited = astar.searching_repeated_astar(2.5)               # initial weight e = 2.5
     # plot.animation_ara_star(path, visited, "Repeated A*")
