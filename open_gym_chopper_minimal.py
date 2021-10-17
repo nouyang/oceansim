@@ -40,11 +40,11 @@ class OceanScape(Env):
         self.y_max = int (self.observation_shape[0] * 0.9)
         self.x_max = self.observation_shape[1]
 
-        self.goal = [np.random.rand()* self.canvas_size[0],
-                    np.random.rand()* self.canvas_size[1]]
+        self.goal = (int(np.random.rand()* self.canvas_size[0]), 
+                    int(np.random.rand()* self.canvas_size[1]))
                      # x and y
         print('goal: ', self.goal)
-        self.goal_radius = 10
+        self.goal_radius = 100
 
 
 # I need to store all the visited points to plot them
@@ -94,6 +94,9 @@ class OceanScape(Env):
         dist = np.sqrt( (b_x - self.goal[0])**2 + (b_y - self.goal[1])**2)
         if dist < self.goal_radius:
             #print('distance', dist)
+            print(f'hurray! in goal region {self.goal},'
+                  f' posit {b_x}, {b_y}, dist {dist}')
+            
             return True
         return False
 
@@ -113,14 +116,15 @@ class OceanScape(Env):
         reward = 1
 
         # apply the action to the chopper
+        move_amt = 32 
         if action == 0:
-            self.buoy.move(0,5)
+            self.buoy.move(0,move_amt)
         elif action == 1:
-            self.buoy.move(0,-5)
+            self.buoy.move(0,-move_amt)
         elif action == 2:
-            self.buoy.move(5,0)
+            self.buoy.move(move_amt,0)
         elif action == 3:
-            self.buoy.move(-5,0)
+            self.buoy.move(-move_amt,0)
         elif action == 4:
             self.buoy.move(0,0)
 
@@ -129,7 +133,8 @@ class OceanScape(Env):
         if self.inGoalRegion(): 
             # giant pot for reaching end goal as a function of batt left
             self.ep_return += 0.1 * (self.max_battery - self.batt_left)
-            #print('reached goal')
+            print(f'reached goal, final return {self.ep_return}')
+            
             done = True
         # else:
             #TODO: change this! Some heuristic I guess... Right now sparse
@@ -137,6 +142,9 @@ class OceanScape(Env):
         # If out of fuel, end the episode.
         if self.batt_left == 0:
             self.ep_return = -10
+            
+            print(f'oops ran out of battery, final return {self.ep_return}')
+            print(f'final position {self.buoy.get_position()}')
             done = True
 
         # Draw elements on the canvas
@@ -154,7 +162,6 @@ class OceanScape(Env):
 
         elif mode == "rgb_array":
             return self.canvas
-# This is created on opencv2.  
 
 
     def get_action_meanings(self):
@@ -162,6 +169,7 @@ class OceanScape(Env):
 
 
     def close(self):
+        cv2.waitKey(2500)
         cv2.destroyAllWindows()
 
 
@@ -172,6 +180,9 @@ class OceanScape(Env):
         #def plot_path(self, path, cl='r', flag=False):
             #path_x = [path[i][0] for i in range(len(path))]
             #path_y = [path[i][1] for i in range(len(path))]
+            
+        self.canvas = cv2.circle(self.canvas, self.goal, radius=self.goal_radius-32, 
+                                 color=(0, 128, 0), thickness=-1) 
 
         # Draw the heliopter on canvas
         for elem in self.elements:
@@ -179,19 +190,18 @@ class OceanScape(Env):
             x,y = elem.x, elem.y
             self.canvas[y : y + elem_shape[1], x:x + elem_shape[0]] = elem.icon
             
-            #breadcrumbs = elem.get_history()
+            breadcrumbs = elem.get_history()
 
-            #for crumb in breadcrumbs:
-                #p_x, p_y = crumb
+            for crumb in breadcrumbs:
+                p_x, p_y = crumb
                 # Use less efficient method for now 
-                #self.canvas = cv2.circle(self.canvas, (p_x, p_y), radius=2,
-                                         #color=(0, 0, 255), thickness=-1) 
+                self.canvas = cv2.circle(self.canvas, (p_x+32, p_y+32), radius=2,
+                                         color=(0, 0, 255), thickness=-1) 
 
         text = 'Batt Left: {} | Rewards: {}'.format(self.batt_left, self.ep_return)
 
         # Put the info on canvas 
-        self.canvas = cv2.putText(self.canvas, text, (10,20), font,  
-                   0.8, (0,0,0), 1, cv2.LINE_AA)
+        self.canvas = cv2.putText(self.canvas, text, (10,20), font,  0.8, (0,0,0), 1, cv2.LINE_AA)
 
 
 
@@ -238,11 +248,14 @@ class Buoy(Point):
         self.icon_h = 64
         self.icon = cv2.resize(self.icon, (self.icon_h, self.icon_w))
 
-
 # NOTES: 
     # You can use cv2.circle() function opencv module:
     # image = cv.circle(image, centerOfCircle, radius, color, thickness)
     # Keep radius as 0 for plotting a single point and thickness as a negative number for filled circle
+            #text = 'Rewards: {}'.format(self.ep_return)
+            #self.canvas = cv2.putText(self.canvas, text, (10,50), font,  
+            #           2, (255,0,0), 1, cv2.LINE_AA)
+
 
 env = OceanScape()
 obs = env.reset()
