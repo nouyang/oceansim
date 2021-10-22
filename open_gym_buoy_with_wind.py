@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import PIL.Image as Image
 import gym
 import random
+import math
 
 from gym import Env, spaces
 import time
@@ -15,7 +16,7 @@ class OceanScape(Env):
         super(OceanScape, self).__init__()
 
         # Define a 2-D observation space
-        self.observation_shape = (600, 800, 3)
+        self.observation_shape = np.array((300, 600, 3)) #height x width, aka rows x cols
         self.canvas_size = self.observation_shape[:2]
         self.observation_space = spaces.Box(low = np.zeros(self.observation_shape),
                                             high = np.ones(self.observation_shape),
@@ -40,17 +41,43 @@ class OceanScape(Env):
         self.y_max = int (self.observation_shape[0] * 0.9)
         self.x_max = self.observation_shape[1]
 
-        self.goal = (int(np.random.rand()* self.canvas_size[0]), 
-                    int(np.random.rand()* self.canvas_size[1]))
-                     # x and y
+        # Canvas size is defined in y, x
+        # Goal is defined in x, y
+        # TODO: Define in 3 dim
+        self.goal = (-np.inf, -np.inf)
         print('goal: ', self.goal)
         self.goal_radius = 100
+        
+        # TODO: create wind region
+        # Split screen into 200x200 squares (12 for 600x800 screen)
+        # Assume time invariant
+        # Vector at each grid: x and y components
+        # TODO: add additional dimensions (may be different winds
+
+        self.grid_size = 200 # pixels
+        self.num_squares = np.ceil(self.canvas_size/self.grid_size).astype(int)
+
+        # Wind is a x,y vector
+        self.wind_x_strengths = np.zeros(self.num_squares) 
+        self.wind_x_grid = self.wind_x_strengths.reshape(self.num_squares)
+
+        self.wind_y_strengths = np.zeros(self.num_squares) 
+        self.wind_y_grid = self.wind_y_strengths.reshape(self.num_squares)
 
 
-# I need to store all the visited points to plot them
-# Agent will have full access to current environment and map
-# (in future -- may make reality more complicated than ideal observation)
+        # Max of how much wind should drain the battery at each step
+        self.wind_cost_multiplier = 1
 
+    def getWindStrength(self, x_pos, y_pos):
+        x, y = x_pos/self.grid_size, y_pos/self.grid_size
+
+        # NOTE: two dimensions, x and y componets of wind vector, at each
+        # square
+        x_strength = self.wind_x_grid[x][y]
+        y_strength = self.wind_y_grid[x][y]
+
+        return x_strength, y_strength
+        # 51 x 31
 
 # reset to initial state: Fixed start and goal locations, Semi random wind
 # field
@@ -62,25 +89,32 @@ class OceanScape(Env):
         # Reset the reward
         self.ep_return = 0 
 
-
         # Determine a place to intialise the chopper in
-        x = random.randrange(int(self.observation_shape[0] * 0.05), int(self.observation_shape[0] * 0.10))
-        y = random.randrange(int(self.observation_shape[1] * 0.15), int(self.observation_shape[1] * 0.20))
+        x = random.randrange(int(self.observation_shape[1] * 0.05), int(self.observation_shape[1] * 0.10))
+        y = random.randrange(int(self.observation_shape[0] * 0.15), int(self.observation_shape[0] * 0.20))
 
         # Intialise the chopper
         self.buoy = Buoy("buoy", self.x_max, self.x_min, self.y_max, self.y_min)
         self.buoy.set_position(x,y)
 
-
         self.elements = [self.buoy]
 
+        # initialize goal
+        self.goal = (int(np.random.rand() * self.canvas_size[1]), 
+                    int(np.random.rand() * self.canvas_size[0]))
+
+        # Initialize wind region 
+        self.wind_x_strengths = np.random.rand(np.sum(self.num_squares)) 
+        self.wind_x_grid = self.wind_x_strengths.reshape(self.num_squares)
+
+        self.wind_y_strengths = np.random.rand(np.sum(self.num_squares)) 
+        self.wind_y_grid = self.wind_y_strengths.reshape(self.num_squares)
 
         # Reset the Canvas
         self.canvas = np.ones(self.observation_shape) * 1
 
         # Draw elements on the canvas
         self.draw_elements_on_canvas() # TODO: why this no work?
-
 
         # return the observation
         return self.canvas 
@@ -91,8 +125,8 @@ class OceanScape(Env):
         #dist = np.linalg.norm(self.buoy.get_position() - self.goal) 
         b_x, b_y = self.buoy.get_position()
         
-        dist = np.sqrt( (b_x - self.goal[0])**2 + (b_y - self.goal[1])**2)
-        if dist < self.goal_radius:
+        dist = np.sqrt( (self.goal[0] - b_x)**2 + (self.goal[1] - b_y)**2)
+        if dist <= self.goal_radius:
             #print('distance', dist)
             print(f'hurray! in goal region {self.goal},'
                   f' posit {b_x}, {b_y}, dist {dist}')
@@ -112,24 +146,31 @@ class OceanScape(Env):
         # Decrease the fuel counter
         self.batt_left -= 1
 
-        # Reward for executing a step.
-        reward = 1
+        # NO Reward for executing a step. Sparse rewards.
+        # reward = 1
 
         # apply the action to the chopper
         move_amt = 32 
         if action == 0:
             self.buoy.move(0,move_amt)
+            move_x, move_y = 0, 1
         elif action == 1:
             self.buoy.move(0,-move_amt)
+            move_x, move_y = 0, -1
         elif action == 2:
             self.buoy.move(move_amt,0)
+            move_x, move_y = 1, 0
         elif action == 3:
             self.buoy.move(-move_amt,0)
+            move_x, move_y = -1, 0
         elif action == 4:
             self.buoy.move(0,0)
+            move_x, move_y = 0, 0
 
+        # Additional decrease from fighting wind
+        wind_x, wind_y = self.getWindStrength
+        self.batt_left -= math.hypot(move_x - wind_x, move_y - wind_y)
 
-        # Increment the episodic return
         if self.inGoalRegion(): 
             # giant pot for reaching end goal as a function of batt left
             self.ep_return += 0.1 * (self.max_battery - self.batt_left)
@@ -151,6 +192,7 @@ class OceanScape(Env):
         self.draw_elements_on_canvas()
 
         return self.canvas, reward, done, []
+
 
 # Render: renders wind field, current location, and visited locations, as
 # well as start and goal locations
@@ -177,10 +219,7 @@ class OceanScape(Env):
         # Init the canvas 
         self.canvas = np.ones(self.observation_shape) * 1
 
-        #def plot_path(self, path, cl='r', flag=False):
-            #path_x = [path[i][0] for i in range(len(path))]
-            #path_y = [path[i][1] for i in range(len(path))]
-            
+        # NOTE: circle method is in x,y
         self.canvas = cv2.circle(self.canvas, self.goal, radius=self.goal_radius-32, 
                                  color=(0, 128, 0), thickness=-1) 
 
@@ -188,21 +227,26 @@ class OceanScape(Env):
         for elem in self.elements:
             elem_shape = elem.icon.shape
             x,y = elem.x, elem.y
+            # WARNING: Note, since this is matrix notation, put y coord
+            # (rows) first 
             self.canvas[y : y + elem_shape[1], x:x + elem_shape[0]] = elem.icon
             
-            breadcrumbs = elem.get_history()
+            breadcrumbs = elem.get_history()[:-1]
 
             for crumb in breadcrumbs:
                 p_x, p_y = crumb
-                # Use less efficient method for now 
+                # Use less efficient method for now (circle per)
+                # NOTE: circle method is in x,y
                 self.canvas = cv2.circle(self.canvas, (p_x+32, p_y+32), radius=2,
                                          color=(0, 0, 255), thickness=-1) 
 
-        text = 'Batt Left: {} | Rewards: {}'.format(self.batt_left, self.ep_return)
+        # TODO: Draw wind region 
 
+        #text = 'Batt Left: {} | Rewards: {}'.format(batt_left, self.ep_return)
+        text = f'Batt Left: {self.batt_left} | Rewards: {self.ep_return:.2f} ' \
+        f'| Goal: {self.goal} Radius {self.goal_radius}| Loc: {x, y}'
         # Put the info on canvas 
-        self.canvas = cv2.putText(self.canvas, text, (10,20), font,  0.8, (0,0,0), 1, cv2.LINE_AA)
-
+        self.canvas = cv2.putText(self.canvas, text, (10,20), font,  0.6, (0,0,0), 1, cv2.LINE_AA)
 
 
 class Point(object):
@@ -267,6 +311,7 @@ obs = env.reset()
 #plt.imshow(screen)
 #plt.show()
 
+
 while True:
     # Take a random action
     action = env.action_space.sample()
@@ -282,8 +327,8 @@ while True:
 env.close()
 
 
-# TODO: add crumb plotting
 # TODO: add wind affect on batt
-# TODO: check goal region works
+#       + create wind region, reset wind region, 
+#       + add effect on battery, and 
 # TODO: plot wind region
-
+# 

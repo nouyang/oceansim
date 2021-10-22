@@ -68,8 +68,6 @@ class Plotting:
         plt.quiver(xgrid, ygrid, color='g')
         #plt.rcParams['figure.figsize'] = (10, 10)
 
-        # test
-
     def plot_grid(self, name):
         obs_x = [x[0] for x in self.obs]
         obs_y = [x[1] for x in self.obs]
@@ -102,12 +100,11 @@ class Plotting:
                 length = 30
             else:
                 length = 40
-            #
             # length = 15
 
             if count % length == 0:
                 plt.pause(0.001)
-        plt.pause(0.01)
+        plt.pause(1)
 
     def plot_path(self, path, cl='r', flag=False):
         path_x = [path[i][0] for i in range(len(path))]

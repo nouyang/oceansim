@@ -242,16 +242,16 @@ def main():
     plot = plotting.Plotting(s_start, s_goal)
 
     path, visited = astar.searching()
-    plot.animation(path, visited, "A*")  # animation
-
     '''
+    plot.animation(path, visited, "A*")  # animation
+    '''
+
     plot.plot_grid('A*')
     plot.plot_wind(astar.wind_xgrid, astar.wind_ygrid)
     plot.plot_path(path)
-    '''
 
     # path, visited = astar.searching_repeated_astar(2.5)               # initial weight e = 2.5
-    # plot.animation_ara_star(path, visited, "Repeated A*")
+    #plot.animation_ara_star(path, visited, "Repeated A*")
 
 
 if __name__ == '__main__':
