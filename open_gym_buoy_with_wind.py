@@ -270,30 +270,53 @@ class OceanScape(Env):
         self.canvas = cv2.putText(self.canvas, text, (10,20), font,  0.6, (0,0,0), 1, cv2.LINE_AA)
 
         self.drawWindBoundaries()
+        self.drawWindArrows()
 
         # NOTE: circle method is in x,y
         #canvas = cv2.circle(self.canvas, (0,0), radius=10, 
         #                         color=(0, 128, 0), thickness=-1) 
 
-        #cv2.arrowedLine(canvas, (0, 0), (200, 0), colors['blue'], 3, 8, 0, 0.1)
+        cv2.arrowedLine(self.canvas, (0, 0), (200, 0), colors['blue'], 3, 8, 0, 0.1)
 
         #text = 'x = 0 cv2'
         #canvas = cv2.putText(canvas, text, (0,10) , font,  0.6,
                              # colors['blue'], 1, cv2.LINE_AA)
 
-        # cv2.arrowedLine(canvas, (0, 0), (0, 200), colors['red'], 3, 8, 0, 0.1)
+    def drawWindArrows(self):
+        offset = np.ceil(0.2 * self.grid_size).astype(int)
+
+        #xs = np.arange(0, self.canvas_size[0], self.grid_size)
+        #ys = np.arange(0, self.canvas_size[1], self.grid_size)
+
+        for index, x in np.ndenumerate(self.wind_x_grid):
+            j, k = index
+            dx = self.wind_x_grid[j][k] * 50
+            dx = np.ceil(dx).astype(int)
+
+            dy = self.wind_y_grid[j][k] * 50
+            dy = np.ceil(dy).astype(int)
+
+            start_x = j * self.grid_size + offset
+            start_y = k * self.grid_size + offset
+            
+            print(dx, dy, start_x, start_y)
+            cv2.arrowedLine(self.canvas, 
+                            (start_y, start_x), 
+                            (start_y + dy, start_x + dx),
+                            colors['red'], 3, 8, 0, 0.5)
+
 
     def drawWindBoundaries(self):
 
-        # self.grid_size
-        # self.canvas_size 
-        # self.wind_grid_shape
         height, width = self.canvas_size
 
+        # Draw vertical lines at each x grid point
         for x in range(self.wind_grid_shape[1]): 
             x_pos = x * self.grid_size
             cv2.line(self.canvas, pt1=(x_pos, 0), pt2=(x_pos, height),
                      color=colors['red'], thickness=2)
+
+        # Draw horizontal lines at each y grid point
         for y in range(self.wind_grid_shape[0]): 
             y_pos = y * self.grid_size
             cv2.line(self.canvas, pt1=(0, y_pos), pt2=(width, y_pos),
