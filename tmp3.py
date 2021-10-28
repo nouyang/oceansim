@@ -1,3 +1,5 @@
+# NOTE: This file generates img to check coordinate systems opencv and matplotlib
+
 import numpy as np 
 import cv2 
 import matplotlib.pyplot as plt
@@ -8,10 +10,12 @@ canvas_size = observation_shape[:2]
 
 
 wind_image_filename = "generated_wind_plot.png"
+
 # Initialize wind region 
 def plotWindImg():
     grid_size = 200 # pixels
     wind_grid_shape = np.ceil(canvas_size/grid_size).astype(int)
+    print(f'wind grid shape {wind_grid_shape}')
 
     # matplotlib figsize is in inches, convert to px
     my_dpi = 100
@@ -23,8 +27,8 @@ def plotWindImg():
     #ax.set_aspect('equal')
 
     #plt.axis('equal')
-    plt.arrow(0,0, 300,0, color='blue', width=0.03, head_width=0)
-    plt.arrow(0,0, 0,300, color='red', width=0.03, head_width=0)
+    plt.arrow(0, 0, 300, 0, color='blue', width=0.03, head_width=0)
+    plt.arrow(0, 0, 0, 300, color='red', width=0.03, head_width=0)
 
     plt.text(0,20,'origin matplot')
     plt.text(300,20,'+x matplot', color='black')
@@ -37,6 +41,10 @@ def plotWindImg():
     plt.subplots_adjust(top = 1, bottom = 0, right = 1, left = 0,
             hspace = 0, wspace = 0)
     plt.margins(0,0)
+
+    wind_x_grid = np.random.random_sample(wind_grid_shape) 
+    wind_y_grid = np.random.random_sample(wind_grid_shape) 
+    plt.quiver(wind_x_grid, wind_y_grid, color='g')
 
     plt.savefig('tmp' + wind_image_filename, transparent=True, pad_inches=0)
 
@@ -65,6 +73,8 @@ def draw_elements_on_canvas():
                          colors['blue'], 1, cv2.LINE_AA)
 
     cv2.arrowedLine(canvas, (0, 0), (0, 200), colors['red'], 3, 8, 0, 0.1)
+    #cv2.line(whiteblankimage, pt1=(100,300), pt2=(400,300), color=(0,0,255), thickness=10)
+
 
     text = 'y = 0 cv2'
     canvas = cv2.putText(canvas, text, (20,20) , font,  0.6,

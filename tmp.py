@@ -5,6 +5,29 @@ img = cv2.imread('argo_buoy.png')
 cv2.imshow('output', img)
 cv2.waitKey(0)
 '''
+import matplotlib.pyplot as plt
+
+	my_dpi=100
+
+	fig = plt.figure(figsize=(800/my_dpi, 800/my_dpi), dpi=my_dpi)
+
+	ax = plt.Axes(fig, [0., 0., 1., 1.])
+	ax.set_axis_off()
+	fig.add_axes(ax)
+
+# 51 x 31
+xgrid = np.concatenate(
+    (
+    np.ones((10, 51)),
+    -np.ones((21, 51))
+    ), axis=0
+ )
+ygrid = np.zeros((31,51))
+
+plt.quiver(xgrid, ygrid, color='g')
+#plt.rcParams['figure.figsize'] = (10, 10)
+plt.savefig('test.png')
+
 def overlay_transparent(background, overlay, x, y):
 
     background_width = background.shape[1]
@@ -33,12 +56,12 @@ def overlay_transparent(background, overlay, x, y):
         )
 
     overlay_image = overlay[..., :3]
-    #overlay_image = overlay[..., [2]]
     mask = overlay[..., 3:] / 255.0
 
     background[y:y+h, x:x+w] = (1.0 - mask) * background[y:y+h, x:x+w] + mask * overlay_image
 
     return background
+
 observation_shape = (400, 600, 3)
 canvas = np.ones(observation_shape) * 1
 
@@ -61,14 +84,14 @@ text = f'Batt Left: {batt_left} | Rewards: {ep_return} | Goal: {goal} Radius {go
 canvas = cv2.circle(canvas, (10,100), radius=10,
                          color=(0, 128, 0), thickness=-1) 
 
-overlay = cv2.imread('wind_field_overlay_trans.png')#, cv2.IMREAD_UNCHANGED)
+#overlay = cv2.imread('wind_field_overlay_trans.png')#, cv2.IMREAD_UNCHANGED)
 overlay = cv2.imread('wind_field_overlay_trans.png', cv2.IMREAD_UNCHANGED)
+#overlay = cv2.imread('wind_field_overlay.png', cv2.IMREAD_UNCHANGED)
+#overlay = cv2.imread('wind_field_overlay.png')
 #print(canvas.shape)
 #print(overlay.shape)
 
-#added_image = cv2.addWeighted(canvas, 0.4, overlay, 0.1, 0)
 canvas = overlay_transparent(canvas, overlay, 0, 0)
-
 
 cv2.imshow("Game", canvas)
 cv2.waitKey(8000)

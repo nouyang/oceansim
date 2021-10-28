@@ -37,17 +37,7 @@ class AStar:
 
 
         self.wind_cost_multiplier = -0.0
-        
-        # 51 x 31
-        
-        self.wind_xgrid = np.concatenate( 
-            (
-                np.ones((10, 51)),
-                -np.ones((21, 51))
-            ), axis=0
-        )
-        self.wind_ygrid = np.zeros((31,51))
-
+di
     def searching(self):
         """
         A_star Searching.

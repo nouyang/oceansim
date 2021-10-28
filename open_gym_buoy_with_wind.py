@@ -11,6 +11,9 @@ import time
 
 font = cv2.FONT_HERSHEY_COMPLEX_SMALL 
 
+# Dictionary containing some colors
+colors = {'blue': (255, 0, 0), 'green': (0, 255, 0), 'red': (0, 0, 255), 'yellow': (0, 255, 255), 'magenta': (255, 0, 255), 'cyan': (255, 255, 0), 'white': (255, 255, 255), 'black': (0, 0, 0), 'gray': (125, 125, 125), 'rand': np.random.randint(0, high=256, size=(3,)).tolist(), 'dark_gray': (50, 50, 50), 'light_gray': (220, 220, 220)}
+
 class OceanScape(Env):
     def __init__(self):
         super(OceanScape, self).__init__()
@@ -262,8 +265,39 @@ class OceanScape(Env):
         #text = 'Batt Left: {} | Rewards: {}'.format(batt_left, self.ep_return)
         text = f'Batt Left: {self.batt_left:0.0f} | Rewards: {self.ep_return:.2f} ' \
         f'| Goal: {self.goal} Radius {self.goal_radius}| Loc: {x, y}'
+
         # Put the info on canvas 
         self.canvas = cv2.putText(self.canvas, text, (10,20), font,  0.6, (0,0,0), 1, cv2.LINE_AA)
+
+        self.drawWindBoundaries()
+
+        # NOTE: circle method is in x,y
+        #canvas = cv2.circle(self.canvas, (0,0), radius=10, 
+        #                         color=(0, 128, 0), thickness=-1) 
+
+        #cv2.arrowedLine(canvas, (0, 0), (200, 0), colors['blue'], 3, 8, 0, 0.1)
+
+        #text = 'x = 0 cv2'
+        #canvas = cv2.putText(canvas, text, (0,10) , font,  0.6,
+                             # colors['blue'], 1, cv2.LINE_AA)
+
+        # cv2.arrowedLine(canvas, (0, 0), (0, 200), colors['red'], 3, 8, 0, 0.1)
+
+    def drawWindBoundaries(self):
+
+        # self.grid_size
+        # self.canvas_size 
+        # self.wind_grid_shape
+        height, width = self.canvas_size
+
+        for x in range(self.wind_grid_shape[1]): 
+            x_pos = x * self.grid_size
+            cv2.line(self.canvas, pt1=(x_pos, 0), pt2=(x_pos, height),
+                     color=colors['red'], thickness=2)
+        for y in range(self.wind_grid_shape[0]): 
+            y_pos = y * self.grid_size
+            cv2.line(self.canvas, pt1=(0, y_pos), pt2=(width, y_pos),
+                     color=colors['blue'], thickness=2)
 
 
 class Point(object):
