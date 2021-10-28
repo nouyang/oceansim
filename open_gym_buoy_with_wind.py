@@ -46,7 +46,7 @@ class OceanScape(Env):
         # TODO: Define in 3 dim
         self.goal = (-np.inf, -np.inf)
         print('goal: ', self.goal)
-        self.goal_radius = 100
+        self.goal_radius = 50
         
         # TODO: create wind region
         # Split screen into 200x200 squares (12 for 600x800 screen)
@@ -55,28 +55,43 @@ class OceanScape(Env):
         # TODO: add additional dimensions (may be different winds
 
         self.grid_size = 200 # pixels
-        self.num_squares = np.ceil(self.canvas_size/self.grid_size).astype(int)
+        self.wind_grid_shape = np.ceil(self.canvas_size/self.grid_size).astype(int)
 
         # Wind is a x,y vector
-        self.wind_x_strengths = np.zeros(self.num_squares) 
-        self.wind_x_grid = self.wind_x_strengths.reshape(self.num_squares)
-
-        self.wind_y_strengths = np.zeros(self.num_squares) 
-        self.wind_y_grid = self.wind_y_strengths.reshape(self.num_squares)
-
+        self.wind_x_grid = np.zeros(self.wind_grid_shape) 
+        self.wind_y_grid = np.zeros(self.wind_grid_shape) 
 
         # Max of how much wind should drain the battery at each step
         self.wind_cost_multiplier = 1
 
-    def getWindStrength(self, x_pos, y_pos):
-        x, y = x_pos/self.grid_size, y_pos/self.grid_size
+        # Where to save quiver plot of wind
+        self.wind_image_filename = "generated_wind_plot.png"
+
+    def plotWindImg(self):
+        # matplotlib figsize is in inches, convert to px
+        my_dpi=100
+        plt.figure(figsize=(self.canvas_size[0]/my_dpi, 
+                            self.canvas_size[1]/my_dpi), dpi=my_dpi)
+        plt.axis("off")
+        plt.quiver(self.wind_x_grid, self.wind_y_grid, color='g')
+        plt.savefig(self.wind_image_filename, transparent=True)
+
+    def getWindStrength(self):
+        x_pos, y_pos = self.buoy.get_position()
+        column = np.floor(x_pos/self.grid_size).astype(int)
+        row = np.floor(y_pos/self.grid_size).astype(int)
 
         # NOTE: two dimensions, x and y componets of wind vector, at each
         # square
-        x_strength = self.wind_x_grid[x][y]
-        y_strength = self.wind_y_grid[x][y]
+        try:
+            x_strength = self.wind_x_grid[row][column]
+            y_strength = self.wind_y_grid[row][column]
+            return x_strength, y_strength
+        except:
+            print(f'failed! {x_pos}, {y_pos}, {column}, {row}')
+            print(f'vs shape of {self.wind_x_grid}, {self.wind_x_grid.shape}')
+            print(f'vs shape of {self.wind_y_grid}, {self.wind_y_grid.shape}')
 
-        return x_strength, y_strength
         # 51 x 31
 
 # reset to initial state: Fixed start and goal locations, Semi random wind
@@ -104,11 +119,11 @@ class OceanScape(Env):
                     int(np.random.rand() * self.canvas_size[0]))
 
         # Initialize wind region 
-        self.wind_x_strengths = np.random.rand(np.sum(self.num_squares)) 
-        self.wind_x_grid = self.wind_x_strengths.reshape(self.num_squares)
+        self.wind_x_grid = np.random.random_sample(self.wind_grid_shape) 
+        self.wind_y_grid = np.random.random_sample(self.wind_grid_shape) 
 
-        self.wind_y_strengths = np.random.rand(np.sum(self.num_squares)) 
-        self.wind_y_grid = self.wind_y_strengths.reshape(self.num_squares)
+        # Generate wind region plot
+        self.plotWindImg()
 
         # Reset the Canvas
         self.canvas = np.ones(self.observation_shape) * 1
@@ -168,7 +183,7 @@ class OceanScape(Env):
             move_x, move_y = 0, 0
 
         # Additional decrease from fighting wind
-        wind_x, wind_y = self.getWindStrength
+        wind_x, wind_y = self.getWindStrength()
         self.batt_left -= math.hypot(move_x - wind_x, move_y - wind_y)
 
         if self.inGoalRegion(): 
@@ -181,7 +196,7 @@ class OceanScape(Env):
             #TODO: change this! Some heuristic I guess... Right now sparse
             # Reward is zero on all transitions, except those into the goal state, on which it is +1. After reaching the goal state (G), the agent returns to the start state (S) to begin a new episode.
         # If out of fuel, end the episode.
-        if self.batt_left == 0:
+        if self.batt_left <= 0:
             self.ep_return = -10
             
             print(f'oops ran out of battery, final return {self.ep_return}')
@@ -190,6 +205,8 @@ class OceanScape(Env):
 
         # Draw elements on the canvas
         self.draw_elements_on_canvas()
+
+        reward = self.ep_return
 
         return self.canvas, reward, done, []
 
@@ -212,7 +229,7 @@ class OceanScape(Env):
 
     def close(self):
         cv2.waitKey(2500)
-        cv2.destroyAllWindows()
+        cv2.destroyallwindows()
 
 
     def draw_elements_on_canvas(self):
@@ -243,7 +260,7 @@ class OceanScape(Env):
         # TODO: Draw wind region 
 
         #text = 'Batt Left: {} | Rewards: {}'.format(batt_left, self.ep_return)
-        text = f'Batt Left: {self.batt_left} | Rewards: {self.ep_return:.2f} ' \
+        text = f'Batt Left: {self.batt_left:0.0f} | Rewards: {self.ep_return:.2f} ' \
         f'| Goal: {self.goal} Radius {self.goal_radius}| Loc: {x, y}'
         # Put the info on canvas 
         self.canvas = cv2.putText(self.canvas, text, (10,20), font,  0.6, (0,0,0), 1, cv2.LINE_AA)
@@ -331,4 +348,3 @@ env.close()
 #       + create wind region, reset wind region, 
 #       + add effect on battery, and 
 # TODO: plot wind region
-# 
