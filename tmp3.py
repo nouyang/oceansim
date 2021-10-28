@@ -13,7 +13,6 @@ def plotWindImg():
     grid_size = 200 # pixels
     wind_grid_shape = np.ceil(canvas_size/grid_size).astype(int)
 
-
     # matplotlib figsize is in inches, convert to px
     my_dpi = 100
     fig, ax = plt.subplots(figsize=(canvas_size[1]/my_dpi, 
@@ -21,22 +20,23 @@ def plotWindImg():
     img = plt.imread('2tmp' + wind_image_filename)
     ax.imshow(img)#, origin='upper')
 
-    plt.axis("off")
     #ax.set_aspect('equal')
-    plt.gca().set_axis_off()
-    plt.subplots_adjust(top = 1, bottom = 0, right = 1, left = 0,
-            hspace = 0, wspace = 0)
-    plt.margins(0,0)
 
     #plt.axis('equal')
-    plt.arrow(0,0, 300,0, color='blue', width=0.03, head_width=10)
-    plt.arrow(0,0, 0,300, color='red', width=0.03, head_width=10)
+    plt.arrow(0,0, 300,0, color='blue', width=0.03, head_width=0)
+    plt.arrow(0,0, 0,300, color='red', width=0.03, head_width=0)
 
-    plt.text(0,0,'origin matplot')
+    plt.text(0,20,'origin matplot')
     plt.text(300,20,'+x matplot', color='black')
     plt.text(0,300,'+y matplot')
 
     plt.text(300,300, f'matplot {canvas_size}')
+
+    #plt.gca().set_axis_off()
+    plt.axis("off")
+    plt.subplots_adjust(top = 1, bottom = 0, right = 1, left = 0,
+            hspace = 0, wspace = 0)
+    plt.margins(0,0)
 
     plt.savefig('tmp' + wind_image_filename, transparent=True, pad_inches=0)
 
