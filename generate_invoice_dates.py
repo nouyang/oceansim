@@ -19,8 +19,9 @@ for d in allsundays(2022):
       print('\n' + curr_month)
       prev_month = curr_month
    print(f'    {d1} – {d2}')
+   i guess they must have some consistent heating-bending method for commerical stuff
+9:39 AM
 
-   
 '''
 
 January

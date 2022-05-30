@@ -2,7 +2,7 @@ import numpy as np
 import cv2 
 import matplotlib.pyplot as plt
 import PIL.Image as Image
-import gym
+#import gym
 import random
 import math
 
@@ -12,7 +12,12 @@ import time
 font = cv2.FONT_HERSHEY_COMPLEX_SMALL 
 
 # Dictionary containing some colors
-colors = {'blue': (255, 0, 0), 'green': (0, 255, 0), 'red': (0, 0, 255), 'yellow': (0, 255, 255), 'magenta': (255, 0, 255), 'cyan': (255, 255, 0), 'white': (255, 255, 255), 'black': (0, 0, 0), 'gray': (125, 125, 125), 'rand': np.random.randint(0, high=256, size=(3,)).tolist(), 'dark_gray': (50, 50, 50), 'light_gray': (220, 220, 220)}
+colors = {'blue': (255, 0, 0), 'green': (0, 255, 0), 'red': (0, 0, 255),
+        'yellow': (0, 255, 255), 'magenta': (255, 0, 255), 'cyan': (255, 255, 0),
+        'white': (255, 255, 255), 'black': (0, 0, 0), 'gray': (125, 125, 125), 'rand':
+        np.random.randint(0, high=256, size=(3,)).tolist(), 'dark_gray': (50, 50, 50),
+        'light_gray': (220, 220, 220)
+        }
 
 class OceanScape(Env):
     def __init__(self):
@@ -57,8 +62,9 @@ class OceanScape(Env):
         # Vector at each grid: x and y components
         # TODO: add additional dimensions (may be different winds
 
-        self.grid_size = 200 # pixels
-        self.wind_grid_shape = np.ceil(self.canvas_size/self.grid_size).astype(int)
+        self.grid_width = 50 # pixels
+        self.wind_grid_shape = np.ceil(self.canvas_size/self.grid_width).astype(int)
+        print(f'{self.canvas_size=}', f'{self.grid_width=}', f'{self.wind_grid_shape=}')
 
         # Wind is a x,y vector
         self.wind_x_grid = np.zeros(self.wind_grid_shape) 
@@ -81,8 +87,8 @@ class OceanScape(Env):
 
     def getWindStrength(self):
         x_pos, y_pos = self.buoy.get_position()
-        column = np.floor(x_pos/self.grid_size).astype(int)
-        row = np.floor(y_pos/self.grid_size).astype(int)
+        column = np.floor(x_pos/self.grid_width).astype(int)
+        row = np.floor(y_pos/self.grid_width).astype(int)
 
         # NOTE: two dimensions, x and y componets of wind vector, at each
         # square
@@ -232,7 +238,7 @@ class OceanScape(Env):
 
     def close(self):
         cv2.waitKey(2500)
-        cv2.destroyallwindows()
+        cv2.destroyAllWindows()
 
 
     def draw_elements_on_canvas(self):
@@ -276,35 +282,39 @@ class OceanScape(Env):
         #canvas = cv2.circle(self.canvas, (0,0), radius=10, 
         #                         color=(0, 128, 0), thickness=-1) 
 
-        cv2.arrowedLine(self.canvas, (0, 0), (200, 0), colors['blue'], 3, 8, 0, 0.1)
+        #cv2.arrowedLine(self.canvas, (0, 0), (200, 0), colors['blue'], 3, 8, 0, 0.1)
 
         #text = 'x = 0 cv2'
         #canvas = cv2.putText(canvas, text, (0,10) , font,  0.6,
                              # colors['blue'], 1, cv2.LINE_AA)
 
     def drawWindArrows(self):
-        offset = np.ceil(0.2 * self.grid_size).astype(int)
+        offset = np.ceil(0.2 * self.grid_width).astype(int)
 
-        #xs = np.arange(0, self.canvas_size[0], self.grid_size)
-        #ys = np.arange(0, self.canvas_size[1], self.grid_size)
+        #xs = np.arange(0, self.canvas_size[0], self.grid_width)
+        #ys = np.arange(0, self.canvas_size[1], self.grid_width)
 
         for index, x in np.ndenumerate(self.wind_x_grid):
             j, k = index
-            dx = self.wind_x_grid[j][k] * 50
+            dx = self.wind_x_grid[j][k] * int(self.grid_width / 2)
             dx = np.ceil(dx).astype(int)
 
-            dy = self.wind_y_grid[j][k] * 50
+            dy = self.wind_y_grid[j][k] * int(self.grid_width/2)
             dy = np.ceil(dy).astype(int)
 
-            start_x = j * self.grid_size + offset
-            start_y = k * self.grid_size + offset
+            start_x = j * self.grid_width + offset
+            start_y = k * self.grid_width + offset
             
-            print(dx, dy, start_x, start_y)
+            #print(dx, dy, start_x, start_y)
+            line_thickness=1
+            tip_length=0.2 
             cv2.arrowedLine(self.canvas, 
                             (start_y, start_x), 
                             (start_y + dy, start_x + dx),
-                            colors['red'], 3, 8, 0, 0.5)
+                            colors['black'], line_thickness, 8, 0, tip_length)
+            
 
+# colors, 3, 8, 0, 0.5
 
     def drawWindBoundaries(self):
 
@@ -312,16 +322,15 @@ class OceanScape(Env):
 
         # Draw vertical lines at each x grid point
         for x in range(self.wind_grid_shape[1]): 
-            x_pos = x * self.grid_size
+            x_pos = x * self.grid_width
             cv2.line(self.canvas, pt1=(x_pos, 0), pt2=(x_pos, height),
-                     color=colors['red'], thickness=2)
+                     color=colors['red'], thickness=1)
 
         # Draw horizontal lines at each y grid point
         for y in range(self.wind_grid_shape[0]): 
-            y_pos = y * self.grid_size
+            y_pos = y * self.grid_width
             cv2.line(self.canvas, pt1=(0, y_pos), pt2=(width, y_pos),
-                     color=colors['blue'], thickness=2)
-
+                     color=colors['blue'], thickness=1)
 
 class Point(object):
     def __init__(self, name, x_max, x_min, y_max, y_min):
@@ -374,17 +383,14 @@ class Buoy(Point):
             #self.canvas = cv2.putText(self.canvas, text, (10,50), font,  
             #           2, (255,0,0), 1, cv2.LINE_AA)
 
-
 env = OceanScape()
 obs = env.reset()
 #plt.imshow(obs)
 #plt.show()
 
-
 #screen = env.render(mode = "rgb_array")
 #plt.imshow(screen)
 #plt.show()
-
 
 while True:
     # Take a random action
@@ -396,10 +402,10 @@ while True:
     #plt.show()
 
     if done == True:
+        cv2.waitKey(0)
         break
 
 env.close()
-
 
 # TODO: add wind affect on batt
 #       + create wind region, reset wind region, 
