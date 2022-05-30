@@ -53,7 +53,6 @@ class OceanScape(Env):
         # Goal is defined in x, y
         # TODO: Define in 3 dim
         self.goal = (-np.inf, -np.inf)
-        print('goal: ', self.goal)
         self.goal_radius = 50
         
         # TODO: create wind region
@@ -217,18 +216,18 @@ class OceanScape(Env):
 
         reward = self.ep_return
 
-        return self.canvas, reward, done, []
+        return self.canvas, reward, done, {}
 
 
 # Render: renders wind field, current location, and visited locations, as
 # well as start and goal locations
-    def render(self, mode = "human"):
-        assert mode in ["human", "rgb_array"], "Invalid mode, must be either \"human\" or \"rgb_array\""
+    def render(self, mode = "norender"):#"human"):
+        assert mode in ["human", "norender"], "Invalid mode, must be either \"human\" or \"rgb_array\""
         if mode == "human":
             cv2.imshow("Game", self.canvas)
             cv2.waitKey(10)
 
-        elif mode == "rgb_array":
+        else:
             return self.canvas
 
 
@@ -383,8 +382,6 @@ class Buoy(Point):
             #self.canvas = cv2.putText(self.canvas, text, (10,50), font,  
             #           2, (255,0,0), 1, cv2.LINE_AA)
 
-env = OceanScape()
-obs = env.reset()
 #plt.imshow(obs)
 #plt.show()
 
@@ -392,22 +389,29 @@ obs = env.reset()
 #plt.imshow(screen)
 #plt.show()
 
-while True:
-    # Take a random action
-    action = env.action_space.sample()
-    obs, reward, done, info = env.step(action)
+def main():
+    env = OceanScape()
+    obs = env.reset()
 
-    # Render the game
-    env.render()
-    #plt.show()
+    while True:
+        # Take a random action
+        action = env.action_space.sample()
+        obs, reward, done, info = env.step(action)
 
-    if done == True:
-        cv2.waitKey(0)
-        break
+        # Render the game
+        env.render()
+        #plt.show()
 
-env.close()
+        if done == True:
+            cv2.waitKey(0)
+            break
 
-# TODO: add wind affect on batt
-#       + create wind region, reset wind region, 
-#       + add effect on battery, and 
-# TODO: plot wind region
+    env.close()
+
+    # TODO: add wind affect on batt
+    #       + create wind region, reset wind region, 
+    #       + add effect on battery, and 
+    # TODO: plot wind region
+
+if __name__ == '__main__':
+    main()
