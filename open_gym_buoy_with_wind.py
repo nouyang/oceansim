@@ -170,7 +170,7 @@ class OceanScape(Env):
         self.batt_left -= 1
 
         # NO Reward for executing a step. Sparse rewards.
-        # reward = 1
+        # reard = 1
 
         # apply the action to the chopper
         move_amt = 32 
@@ -202,7 +202,9 @@ class OceanScape(Env):
             done = True
         # else:
             #TODO: change this! Some heuristic I guess... Right now sparse
-            # Reward is zero on all transitions, except those into the goal state, on which it is +1. After reaching the goal state (G), the agent returns to the start state (S) to begin a new episode.
+            # Reward is zero on all transitions, except those into the goal
+            # state, on which it is +1. After reaching the goal state (G), the
+            # agent returns to the start state (S) to begin a new episode.
         # If out of fuel, end the episode.
         if self.batt_left <= 0:
             self.ep_return = -10
@@ -212,7 +214,7 @@ class OceanScape(Env):
             done = True
 
         # Draw elements on the canvas
-        self.draw_elements_on_canvas()
+        #self.draw_elements_on_canvas() # REMOVE THIS?
 
         reward = self.ep_return
 
