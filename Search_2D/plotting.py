@@ -93,7 +93,6 @@ class Plotting:
 
         plt.title(name)
         plt.axis("equal") # NOTE: THIS ATE AN HOUR OF MY LIFE
-        #plt.rcParams["figure.figsize"]= (20,10)
 
     def plot_visited(self, visited, cl='gray'):
         if self.xI in visited:
