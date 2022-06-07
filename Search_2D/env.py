@@ -8,6 +8,8 @@ class Env:
     def __init__(self):
         self.x_range = 51  # size of background
         self.y_range = 31
+        self.x_range = 51  # size of background
+        self.y_range = 31
         self.motions = [(-1, 0), (-1, 1), (0, 1), (1, 1),
                         (1, 0), (1, -1), (0, -1), (-1, -1)]
         self.obs = self.obs_map()

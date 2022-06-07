@@ -37,7 +37,8 @@ class AStar:
 
 
         self.wind_cost_multiplier = -0.0
-di
+        
+        
     def searching(self):
         """
         A_star Searching.
