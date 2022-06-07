@@ -3,6 +3,7 @@ Plot tools 2D
 @author: huiming zhou
 """
 
+from matplotlib.patches import Rectangle
 import os
 import sys
 import matplotlib.pyplot as plt
@@ -22,13 +23,18 @@ class Plotting:
 
     def update_obs(self, obs):
         self.obs = obs
-    def plot_wind(self, xgrid, ygrid):
+
+    def plot_wind(self, xgrid, ygrid, wind_marker=['.', '.']):
+        rect = Rectangle((0, 10-0.5), 50, 20.5, linewidth=0,
+                            facecolor="lightgray")
+        # Add the patch to the Axes
+        plt.gca().add_patch(rect)
         # actually just dots...
         #sns.set_theme(context='talk', style='whitegrid')
 
 # GRID
         x = np.arange(0,xgrid.shape[1]-1,1)
-        y = np.arange(0,xgrid.shape[0]-1,1)
+        y = np.arange(0,ygrid.shape[0]-1,1)
         XX, YY = np.meshgrid(x,y)
 
         #sns.scatterplot(XX, YY)
@@ -38,12 +44,23 @@ class Plotting:
 
 # ARROWS
         # put in some arrows
-        x = np.arange(0,xgrid.shape[1],10)
+        x = np.arange(0,xgrid.shape[1]-10,10)
         y = np.arange(0,xgrid.shape[0]-10,10)
+        y = [10,20]
         XX, YY = np.meshgrid(x,y)
         XX = XX + 5
         YY = YY + 5
-        plt.plot(XX.flat, YY.flat, ">", color='blue', markersize='15')
+        #plt.plot(XX.flat, YY.flat, ">", color='blue', markersize='15') # right
+
+        plt.plot(XX.flat, YY.flat, wind_marker[0], color='blue', markersize='15')
+                # put in some arrows
+        x = np.arange(0,xgrid.shape[1]-10,10)
+        y = [0]
+        XX, YY = np.meshgrid(x,y)
+        XX = XX + 5
+        YY = YY + 5
+        #plt.plot(XX.flat, YY.flat, ">", color='blue', markersize='15') # right
+        plt.plot(XX.flat, YY.flat, wind_marker[1], color='blue', markersize='15')
 
     '''
         XX, YY = np.meshgrid(x,y)
@@ -72,7 +89,7 @@ class Plotting:
 
         plt.annotate('START',
              xy=xy_start, 
-             xytext=(15, -20),
+             xytext=(10, -30),
              textcoords='offset points')
 
         plt.annotate('GOAL',
@@ -89,10 +106,10 @@ class Plotting:
         plt.hlines([0,30], color='k', xmin=0, xmax=50, linewidth=8)
         plt.vlines([20,40], color='k', ymin=0, ymax=15, linewidth=8)
         plt.plot([30,30], [15,30], color='k', linewidth=8) # top vertical
+        plt.plot([10,20], [15,15], color='k', linewidth=8) # middle horizontal 
 
-
-        plt.title(name)
-        plt.axis("equal") # NOTE: THIS ATE AN HOUR OF MY LIFE
+        #plt.title(f'{name}\nPath Length: {len(self.xI)}, Cost:')
+        #plt.axis("equal") # NOTE: THIS ATE AN HOUR OF MY LIFE
 
     def plot_visited(self, visited, cl='gray'):
         if self.xI in visited:
@@ -122,16 +139,18 @@ class Plotting:
         plt.pause(1)
 
     def plot_path(self, path, cl='r', flag=False):
+        # plot wind region
+
         print('plot path')
         path_x = [path[i][0] for i in range(len(path))]
         path_y = [path[i][1] for i in range(len(path))]
+        print('path length', len(path))
 
         if not flag:
             plt.plot(path_x, path_y, linewidth=10, color='r',
                 marker='s', markersize=2)
         else:
             plt.plot(path_x, path_y, linewidth='3', color=cl)
-
 
         #plt.plot(self.xI[0], self.xI[1], color="blue", marker='o')#, markersize=15) #  s = square
         #plt.plot(self.xG[0], self.xG[1], color="green", marker='o')#, markersize=15)

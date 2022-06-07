@@ -156,6 +156,7 @@ class AStar:
         #print(self.wind_xgrid.shape, self.wind_ygrid.shape, x2, y2)
 
         wind_cost = self.wind_cost_multiplier * (wind_x + wind_y)
+        print(s_start, s_goal, euclid_cost, wind_cost)
         return euclid_cost + wind_cost
 
     def is_collision(self, s_start, s_end):
