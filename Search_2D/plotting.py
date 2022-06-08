@@ -25,19 +25,20 @@ class Plotting:
         self.obs = obs
 
     def plot_wind(self, xgrid, ygrid, wind_marker=['.', '.']):
+# gray
         rect = Rectangle((0, 10-0.5), 50, 20.5, linewidth=0,
-                            facecolor="lightgray")
+                            #facecolor="lightgray", opacity='0.3')
+                            facecolor=(.3, .3, .3,0.2))
         # Add the patch to the Axes
         plt.gca().add_patch(rect)
-        # actually just dots...
-        #sns.set_theme(context='talk', style='whitegrid')
 
-# GRID
+        # actually just dots...
+
+# DOT GRID 
         x = np.arange(0,xgrid.shape[1]-1,1)
         y = np.arange(0,ygrid.shape[0]-1,1)
         XX, YY = np.meshgrid(x,y)
 
-        #sns.scatterplot(XX, YY)
         #plt.plot(XX, YY, color='gray', markersize=1)
         #plt.scatter(XX, YY, color='gray', size=1)
         plt.plot(XX.flat, YY.flat, ".", color='gray', markersize='2')
@@ -101,9 +102,12 @@ class Plotting:
         # textcoords is the coordinate system that xy is given in ('offset points' means the offset in points from the xy value)
 
         # left and right line
-        plt.vlines([0,50], color='k', ymin=0, ymax=30, linewidth=8)
+        EXTEND=0.2
+        plt.vlines([0,50], color='k', ymin=0-EXTEND, ymax=30+EXTEND, linewidth=8)
         # right line
-        plt.hlines([0,30], color='k', xmin=0, xmax=50, linewidth=8)
+        plt.hlines([0,30], color='k', xmin=0-EXTEND, xmax=50+EXTEND, linewidth=8)
+
+        # obstacle walls
         plt.vlines([20,40], color='k', ymin=0, ymax=15, linewidth=8)
         plt.plot([30,30], [15,30], color='k', linewidth=8) # top vertical
         plt.plot([10,20], [15,15], color='k', linewidth=8) # middle horizontal 
@@ -139,6 +143,7 @@ class Plotting:
         plt.pause(1)
 
     def plot_path(self, path, cl='r', flag=False):
+
         # plot wind region
 
         print('plot path')

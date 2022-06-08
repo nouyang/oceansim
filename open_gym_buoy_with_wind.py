@@ -90,6 +90,7 @@ class OceanScape(Env):
         self.wind_x_grid + self.grid_width/2,
             self.wind_y_grid + (self.grid_width/2), color='green') # green
 
+        plt.grid()
         plt.savefig(self.wind_image_filename, transparent=True)
 
     def getWindStrength(self):
@@ -348,7 +349,5 @@ def main():
             cv2.waitKey(0)
             break
 
-if __name__ == '__main__':
-    main()
 if __name__ == '__main__':
     main()
